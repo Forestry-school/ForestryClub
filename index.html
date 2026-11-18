@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<style>
+:root{--ink:#1e3a44;--mute:#5f7a80;--mint:#d5eedd;--bg:#f4f8f6;--blue:#b8e0fb;--green:#d6efdc;--teal:#1f9e84;--gold:#e9bf5b;--red:#e2674f;--navy:#264b5d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+.hero{background:var(--mint);padding:34px 20px 26px}
+.in{max-width:1000px;margin:0 auto}
+.hero .in{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.hero small{color:var(--teal);font-weight:700;letter-spacing:.08em}
+h1{font-size:46px;line-height:1.15;margin:4px 0 10px;letter-spacing:.12em}
+.hero p{margin:0;color:#35525a;font-size:17px}
+.art{position:relative;height:150px;border-radius:20px 60px 20px 60px;background:linear-gradient(#e8f6ec 55%,#9fd48c 55%);overflow:hidden}
+.art span{position:absolute;font-size:54px;filter:drop-shadow(0 3px 0 rgba(0,0,0,.08))}
+main.in{padding:18px 20px 90px}
+.note{background:var(--mint);border-radius:14px;padding:12px 18px;font-size:15px;margin-bottom:22px}
+h2{font-size:22px;margin:0 0 12px;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{border:0;text-align:left;border-radius:22px;padding:0;cursor:pointer;font:inherit;color:var(--ink);overflow:hidden;box-shadow:0 8px 18px rgba(30,58,68,.12);transition:transform .15s}
+.tile:hover{transform:translateY(-3px)}
+.tile.on{outline:4px solid var(--navy)}
+.tile .pic{height:150px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:52px}
+.tile .tx{padding:6px 16px 16px}
+.tile b{display:block;font-size:24px;letter-spacing:.08em}
+.tile .k{color:var(--mute);font-weight:700;font-size:14px}
+.tile .st{font-size:14px;margin-top:2px}
+.t1{background:var(--blue)}.t2{background:var(--green)}
+.steps{background:#fff;border-radius:22px;padding:8px 18px;box-shadow:0 8px 18px rgba(30,58,68,.08)}
+.step{display:flex;gap:14px;padding:14px 0;align-items:flex-start}
+.step i{flex:none;width:34px;height:34px;border-radius:50%;color:#fff;font-style:normal;font-weight:700;display:flex;align-items:center;justify-content:center}
+.step b{display:block;font-size:18px}.step span{color:var(--mute);font-size:15px}
+.look{margin-top:14px;width:100%;padding:12px;border-radius:14px;border:2px solid var(--ink);background:#fff;font:inherit;font-weight:700;cursor:pointer}
+#work{display:none;margin-top:28px}
+.card{background:#fff;border-radius:22px;padding:20px;box-shadow:0 8px 18px rgba(30,58,68,.08);margin-bottom:16px}
+.row2{display:grid;grid-template-columns:1fr 1.4fr auto;gap:10px;align-items:end}.ok2{padding:11px 20px;border:0;border-radius:12px;background:var(--navy);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+label.f{font-size:14px;color:var(--mute);display:block}
+input,select{width:100%;font:inherit;padding:10px;border:1.5px solid #cfdcd7;border-radius:12px;background:#fff;color:var(--ink)}
+.win{font-size:14px;padding:10px 14px;border-radius:12px;background:#fff6d8;margin-bottom:14px}
+.win.off{background:#f6e3df}
+.slot{font-weight:700;font-size:18px;margin:18px 0 8px}
+.clubs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.club{position:relative;border:2px solid #e3ece8;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:6px;background:#fcfefd}
+.club.pick{border-color:var(--teal);background:#effaf5}
+.club b{font-size:17px;padding-right:30px}.club small{color:var(--mute);display:block}.fee{color:var(--red)!important;font-weight:700}details{font-size:15px}summary{cursor:pointer;color:var(--teal);font-weight:700}details p{margin:6px 0}
+.club .ctl{display:flex;gap:10px;align-items:center;margin-top:4px}
+.club select{width:auto}
+.club .r{display:flex;gap:8px;align-items:center;font-size:15px}
+.club .r input{width:20px;height:20px;accent-color:var(--teal)}
+.heart{position:absolute;top:8px;right:10px;border:0;background:none;font-size:22px;cursor:pointer;color:#c9d6d2}
+.heart.on{color:var(--red)}
+.go{width:100%;padding:14px;margin-top:18px;font:inherit;font-size:18px;font-weight:700;background:var(--gold);color:var(--ink);border:0;border-radius:16px;box-shadow:0 5px 0 #b8923a;cursor:pointer}
+.go:disabled{opacity:.5}
+.msg{margin-top:12px}.ok{color:var(--teal)}.err{color:#b33}
+.res{padding:10px 0;border-top:1px solid #e3ece8}
+#fav{position:fixed;right:16px;bottom:16px;background:var(--navy);color:#fff;border:0;border-radius:30px;padding:12px 22px;font:inherit;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;z-index:5}
+#drawer{position:fixed;right:16px;bottom:76px;width:min(340px,calc(100% - 32px));max-height:60vh;overflow:auto;background:#fff;border-radius:20px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.25);display:none;z-index:5}
+#drawer.on{display:block}
+#drawer div{padding:8px 0;border-top:1px solid #e3ece8}#drawer div:first-of-type{border:0}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:760px){.hero .in,.grid{grid-template-columns:1fr}h1{font-size:38px}.row2{grid-template-columns:1fr}.clubs{grid-template-columns:1fr}.tile .pic{height:110px}}
+</style></head><body>
+<header class="hero"><div class="in">
+<div><small>新北市福瑞斯特國民中小學</small><h1>社團報名</h1>
+<p>課間社團與課後社團的開課資訊，都能在這裡查詢，並直接線上報名。</p></div>
+<div class="art" aria-hidden="true"><span style="left:6%;top:30px">☀️</span><span style="left:28%;top:62px">🎨</span><span style="left:48%;top:56px">🧪</span><span style="left:67%;top:70px">⚽</span><span style="left:82%;top:52px">🏀</span></div>
+</div></header>
+
+<main class="in">
+<div class="note">課間社團依「志願序」分發；課後社團週一到週五每天最多選 1 個。人數超過名額時以抽籤決定，結果公布後可在「查詢結果」看到。</div>
+<div class="grid">
+<section><h2>想先看哪一項？</h2>
+<div class="tiles" id="tiles"><button class="tile t1" data-t="課間"></button><button class="tile t2" data-t="課後"></button></div>
+<button class="look" data-t="查詢">查詢報名與錄取結果</button></section>
+<section><h2>報名怎麼進行</h2><div class="steps">
+<div class="step"><i style="background:var(--teal)">1</i><div><b>先看開課</b><span>選好孩子的年級，就只會列出可以報名的社團。看到喜歡的，可以先加入喜愛清單。</span></div></div>
+<div class="step"><i style="background:var(--gold)">2</i><div><b>填資料報名</b><span>課間社團排志願序；課後社團同一天只能選一個。報名期間內可以重新送出。</span></div></div>
+<div class="step"><i style="background:var(--red)">3</i><div><b>等結果公布</b><span>報名人數超過名額時以抽籤決定，公布後到「查詢結果」看錄取或備取。</span></div></div>
+</div></section></div>
+
+<section id="work"><h2 id="wt"></h2><div id="win"></div>
+<div class="card" id="idc"><div class="row2">
+<div><label class="f">姓名</label><input id="nm" autocomplete="off"></div>
+<div><label class="f">生日（月日 4 位數字，例如 0315）</label><input id="bd" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+<button class="ok2" id="lg">確認身分</button></div><div id="who" class="msg"></div></div>
+<div class="card" id="body"></div></section>
+</main>
+<div id="drawer"></div>
+<button id="fav">♥ 喜愛清單 <span id="fc">0</span></button>
+
+<script>
+const $=s=>document.querySelector(s);
+const GN=['','一','二','三','四','五','六','七','八','九'];
+let D=null,tab='',favs=[];
+try{favs=JSON.parse(localStorage.getItem('fav')||'[]')}catch(e){}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const okG=(s,g)=>{const m=String(s).split(/[-~～]/).map(Number);return g>=m[0]&&g<=m[m.length-1]};
+let me=null;
+google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>alert('載入失敗：'+e.message)).getInit();
+
+function wtxt(w){return w.open?`報名中，${w.end} 截止`:w.early?`${w.start} 開放報名`:'報名已截止'}
+function tiles(){
+  const n=t=>D.clubs.filter(c=>c.type===t).length;
+  $('#tiles').innerHTML=[['課間','t1','🎨🧪','週二、週三的課間'],['課後','t2','⚽🧱','週一至週五放學後']].map(a=>
+   `<button class="tile ${a[1]}" data-t="${a[0]}"><div class="pic">${a[2]}</div><div class="tx"><span class="k">${a[3]}</span><b>${a[0]}社團</b><div>${n(a[0])} 個社團</div><div class="st">${wtxt(D.win[a[0]])}</div></div></button>`).join('');
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-t]');if(!b||!D)return;
+  tab=b.dataset.t;$('#work').style.display='block';
+  document.querySelectorAll('.tile').forEach(x=>x.classList.toggle('on',x.dataset.t===tab));
+  render();$('#work').scrollIntoView({behavior:'smooth'});
+});
+$('#lg').onclick=()=>{
+  const p=ident();$('#who').className='msg';$('#who').textContent='確認中…';
+  google.script.run.withSuccessHandler(r=>{me=r;$('#who').className='msg ok';$('#who').textContent=`已確認：${GN[r.grade]}年級 班級座號 ${r.seat}　${p.name}`;render()})
+   .withFailureHandler(e=>{me=null;$('#who').className='msg err';$('#who').textContent=e.message;render()}).login(p);
+};
+['nm','bd'].forEach(i=>$('#'+i).oninput=()=>{if(me){me=null;$('#who').textContent='';render()}});
+
+function render(){
+  const b=$('#body'),g=me?me.grade:0,w=D.win[tab];
+  $('#wt').textContent=tab==='查詢'?'查詢結果':tab+'社團報名';
+  $('#win').innerHTML=w?`<div class="win ${w.open?'':'off'}">${wtxt(w)}　・　結果公布：${w.pubAt}</div>`:'';
+  if(tab==='查詢'){b.innerHTML='<p>請在上方輸入姓名和生日。</p><button class="go" onclick="look()">查詢</button><div id="out"></div>';return}
+  if(!g){b.innerHTML='<p>請先在上方輸入姓名和生日、按「確認身分」，系統會列出可以報名的社團。</p>';return}
+  const cl=D.clubs.filter(c=>c.type===tab&&okG(c.grades,g));
+  if(!cl.length){b.innerHTML=`<p>${GN[g]}年級目前沒有可報名的${tab}社團。</p>`;return}
+  const slots={};cl.forEach(c=>(slots[c.slot]=slots[c.slot]||[]).push(c));
+  let h=tab==='課間'?'<p>每個社團選一個志願序，1 是最想參加的。只填想去的就好，至少填 1 個。部分社團需酌收材料費，請點開「簡介與注意事項」查看。</p>':'<p>週一到週五每天最多選 1 個，不想參加的那天選「不參加」。費用以「每堂」計算，實際堂數以學校公告為準。</p>';
+  for(const s in slots){
+    const a=slots[s];h+=`<div class="slot">${esc(s)}</div><div class="clubs">`;
+    a.forEach(c=>{
+      const f=favs.includes(c.id);
+      h+=`<div class="club ${f?'pick':''}"><button class="heart ${f?'on':''}" data-f="${esc(c.id)}" aria-label="加入喜愛清單">♥</button><b>${esc(c.name)}</b><small>老師：${esc(c.teacher)}　名額 ${c.cap}</small><small class="fee">${feeTxt(c)}</small><details><summary>簡介與注意事項</summary><p>${esc(c.intro||'')}</p><p><strong>注意事項：</strong>${esc(c.note||'')}</p></details>`+
+      (tab==='課間'?`<div class="ctl">志願序 <select data-slot="${esc(s)}" data-id="${esc(c.id)}"><option value="">不填</option>${a.map((_,i)=>`<option>${i+1}</option>`).join('')}</select></div>`
+       :`<label class="r"><input type="radio" name="${esc(s)}" value="${esc(c.id)}">選這個</label>`)+'</div>';
+    });
+    h+='</div>'+(tab==='課後'?`<label class="r" style="margin-top:10px;display:flex;gap:8px"><input type="radio" name="${esc(s)}" value="" checked style="width:20px;height:20px;accent-color:var(--teal)">${esc(s)}不參加</label>`:'');
+  }
+  b.innerHTML=h+'<button class="go" id="send">送出報名</button><div class="msg" id="m"></div>';
+  $('#send').onclick=send;
+}
+
+document.addEventListener('click',e=>{
+  const h=e.target.closest('[data-f]');if(!h)return;
+  const id=h.dataset.f;favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];
+  try{localStorage.setItem('fav',JSON.stringify(favs))}catch(x){}
+  h.classList.toggle('on');h.closest('.club').classList.toggle('pick');favUI();
+});
+$('#fav').onclick=()=>$('#drawer').classList.toggle('on');
+function favUI(){
+  $('#fc').textContent=favs.length;if(!D)return;
+  const L=favs.map(id=>D.clubs.find(c=>c.id===id)).filter(Boolean);
+  $('#drawer').innerHTML='<b>我的喜愛清單</b>'+(L.length?L.map(c=>`<div>${esc(c.name)}<br><small>${c.type}・${esc(c.slot)}・${esc(c.grades)}年級</small></div>`).join(''):'<div>還沒有加入社團。點社團卡片右上角的愛心就會出現在這裡。</div>');
+}
+function feeTxt(c){
+  const m=+c.mat,p=+c.per;
+  if(c.type==='課後')return (p?`每堂 $${p}`:'每堂費用待公布')+(m?`　另酌收材料費 $${m}`:'');
+  return m?`酌收材料費 $${m}`:'不另收材料費（若有需要，老師會另行通知）';
+}
+function ident(){return{name:$('#nm').value,bd:$('#bd').value}}
+function say(t,ok){const m=$('#m');m.className='msg '+(ok?'ok':'err');m.textContent=t}
+function send(){
+  const p=ident();p.type=tab;p.picks=[];
+  if(tab==='課間'){
+    const by={},sel=[...document.querySelectorAll('#body select')];
+    sel.forEach(s=>{if(s.value)(by[s.dataset.slot]=by[s.dataset.slot]||[]).push({id:s.dataset.id,rank:+s.value})});
+    for(const s of new Set(sel.map(s=>s.dataset.slot))){
+      const a=by[s]||[];
+      if(!a.length)return say(`${s}請至少填一個志願`);
+      if(new Set(a.map(x=>x.rank)).size!==a.length)return say(`${s}的志願序不能重複`);
+      p.picks.push(...a);
+    }
+  }else document.querySelectorAll('#body input[type=radio]:checked').forEach(r=>{if(r.value)p.picks.push({id:r.value})});
+  if(!p.picks.length)return say('請至少選一個社團');
+  const b=$('#send');b.disabled=true;say('送出中…',true);
+  google.script.run.withSuccessHandler(t=>{b.disabled=false;say(t,true)}).withFailureHandler(e=>{b.disabled=false;say(e.message)}).submit(p);
+}
+function look(){
+  google.script.run.withSuccessHandler(r=>{
+    $('#out').innerHTML=r.length?r.map(x=>`<div class="res"><b>${esc(x.club)}</b><br><small>${x.type}・${esc(x.slot)}${x.rank?'・志願 '+x.rank:''}</small>　${esc(x.status)}</div>`).join(''):'<p>查不到資料，請確認姓名和生日。</p>';
+  }).withFailureHandler(e=>$('#out').textContent=e.message).lookup(ident());
+}
+</script></body></html>
