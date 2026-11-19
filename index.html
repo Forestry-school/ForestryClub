@@ -171,6 +171,15 @@ function feeTxt(c){
   if(c.type==='課後')return (p?`每堂 $${p}`:'每堂費用待公布')+(m?`　另酌收材料費 $${m}`:'');
   return m?`酌收材料費 $${m}`:'不另收材料費（若有需要，老師會另行通知）';
 }
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(!t.matches||!t.matches('#body select[data-slot]')||!t.value)return;
+  const cleared=[];
+  document.querySelectorAll('#body select[data-slot]').forEach(s=>{
+    if(s!==t&&s.dataset.slot===t.dataset.slot&&s.value===t.value){s.value='';cleared.push(s.closest('.club').querySelector('b').textContent)}
+  });
+  if(cleared.length)say(`志願序 ${t.value} 只能用一次，已清除「${cleared.join('、')}」的志願序，請重新選擇。`,true);
+});
 function ident(){return{name:$('#nm').value,bd:$('#bd').value}}
 function say(t,ok){const m=$('#m');m.className='msg '+(ok?'ok':'err');m.textContent=t}
 function send(){
