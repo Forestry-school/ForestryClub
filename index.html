@@ -96,7 +96,10 @@ try{favs=JSON.parse(localStorage.getItem('fav')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const okG=(s,g)=>{const m=String(s).split(/[-~～]/).map(Number);return g>=m[0]&&g<=m[m.length-1]};
 let me=null;
-google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>{$('#tiles').innerHTML='<div class="win off">載入失敗：'+esc(e.message)+'<br>請管理員檢查試算表的「社團資料」和「設定」工作表。</div>'}).getInit();
+const LOCAL=typeof google==='undefined'||!google.script;
+if(LOCAL)$('#tiles').innerHTML='<div class="win off">這個頁面不是從 Apps Script 的部署網址開啟的，連不到試算表。請用「部署 → 網頁應用程式」給的 /exec 連結開啟。</div>';
+else setTimeout(()=>{if(!D)$('#tiles').innerHTML='<div class="win off">等了 15 秒還沒有回應。請重新整理，或確認 Apps Script 已部署成網頁應用程式。</div>'},15000);
+if(!LOCAL)google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>{$('#tiles').innerHTML='<div class="win off">載入失敗：'+esc(e.message)+'<br>請管理員檢查試算表的「社團資料」和「設定」工作表。</div>'}).getInit();
 
 function wtxt(w){return w.open?`報名中，${w.end} 截止`:w.early?`${w.start} 開放報名`:'報名已截止'}
 function tiles(){
