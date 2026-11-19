@@ -42,7 +42,7 @@ input,select{width:100%;font:inherit;padding:10px;border:1.5px solid #cfdcd7;bor
 .clubs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .club{position:relative;border:2px solid #e3ece8;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:6px;background:#fcfefd}
 .club.pick{border-color:var(--teal);background:#effaf5}
-.club b{font-size:17px;padding-right:30px}.club small{color:var(--mute);display:block}.fee{color:var(--red)!important;font-weight:700}details{font-size:15px}summary{cursor:pointer;color:var(--teal);font-weight:700}details p{margin:6px 0}
+.club b{font-size:17px;padding-right:30px}.club small{color:var(--mute);display:block}.club.lock{background:#f0f2f1;border-style:dashed}.fee{color:var(--red)!important;font-weight:700}details{font-size:15px}summary{cursor:pointer;color:var(--teal);font-weight:700}details p{margin:6px 0}
 .club .ctl{display:flex;gap:10px;align-items:center;margin-top:4px}
 .club select{width:auto}
 .club .r{display:flex;gap:8px;align-items:center;font-size:15px}
@@ -119,7 +119,7 @@ document.addEventListener('click',e=>{
 });
 $('#lg').onclick=()=>{
   const p=ident();$('#who').className='msg';$('#who').textContent='確認中…';
-  api('login',p).then(r=>{me=r;$('#who').className='msg ok';$('#who').textContent=`已確認：${GN[r.grade]}年級 班級座號 ${r.seat}　${p.name}`;render()})
+  api('login',p).then(r=>{me=r;$('#who').className='msg ok';$('#who').textContent=`已確認：${GN[r.grade]}年級 班級座號 ${r.seat}　${p.name}${r.team?'（校隊：'+r.team+'）':''}`;render()})
    .catch(e=>{me=null;$('#who').className='msg err';$('#who').textContent=e.message;render()});
 };
 ['nm','bd'].forEach(i=>$('#'+i).oninput=()=>{if(me){me=null;$('#who').textContent='';render()}});
@@ -129,6 +129,7 @@ function render(){
   $('#wt').textContent=tab==='查詢'?'查詢結果':tab+'社團報名';
   $('#win').innerHTML=w?`<div class="win ${w.open?'':'off'}">${wtxt(w)}　・　結果公布：${w.pubAt}</div>`:'';
   if(tab==='查詢'){b.innerHTML='<p>請在上方輸入姓名和生日。</p><button class="go" onclick="look()">查詢</button><div id="out"></div>';return}
+  if(me&&me.team){b.innerHTML='<p>你是校隊成員（'+esc(me.team)+'），已固定參加，所有課間和課後社團都不能報名。</p>'+lockedHTML(g,me.team);return}
   if(!g){b.innerHTML='<p>請先在上方輸入姓名和生日、按「確認身分」，系統會列出可以報名的社團。</p>';return}
   const cl=D.clubs.filter(c=>c.type===tab&&okG(c.grades,g));
   if(!cl.length){b.innerHTML=`<p>${GN[g]}年級目前沒有可報名的${tab}社團。</p>`;return}
@@ -144,7 +145,7 @@ function render(){
     });
     h+='</div>'+(tab==='課後'?`<label class="r" style="margin-top:10px;display:flex;gap:8px"><input type="radio" name="${esc(s)}" value="" checked style="width:20px;height:20px;accent-color:var(--teal)">${esc(s)}不參加</label>`:'');
   }
-  b.innerHTML=h+'<button class="go" id="send">送出報名</button><div class="msg" id="m"></div>';
+  b.innerHTML=h+lockedHTML(g)+'<button class="go" id="send">送出報名</button><div class="msg" id="m"></div>';
   $('#send').onclick=send;
 }
 
@@ -159,6 +160,11 @@ function favUI(){
   $('#fc').textContent=favs.length;if(!D)return;
   const L=favs.map(id=>D.clubs.find(c=>c.id===id)).filter(Boolean);
   $('#drawer').innerHTML='<b>我的喜愛清單</b>'+(L.length?L.map(c=>`<div>${esc(c.name)}<br><small>${c.type}・${esc(c.slot)}・${esc(c.grades)}年級</small></div>`).join(''):'<div>還沒有加入社團。點社團卡片右上角的愛心就會出現在這裡。</div>');
+}
+function lockedHTML(g,team){
+  const L=D.clubs.filter(c=>c.type==='校隊'&&(team?c.name.includes(team):okG(c.grades,g)));
+  if(!L.length)return '';
+  return '<div class="slot">校隊（已鎖定，不開放報名）</div><div class="clubs">'+L.map(c=>`<div class="club lock"><b>🔒 ${esc(c.name)}</b><small>老師／教練：${esc(c.teacher)}　${esc(c.slot)}</small><small class="fee">已鎖定，不開放報名</small><details><summary>簡介與注意事項</summary><p>${esc(c.intro||'')}</p><p><strong>注意事項：</strong>${esc(c.note||'')}</p></details></div>`).join('')+'</div>';
 }
 function feeTxt(c){
   const m=+c.mat,p=+c.per;
