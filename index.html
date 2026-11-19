@@ -70,7 +70,7 @@ input,select{width:100%;font:inherit;padding:10px;border:1.5px solid #cfdcd7;bor
 <div class="note">課間社團依「志願序」分發；課後社團週一到週五每天最多選 1 個。人數超過名額時以抽籤決定，結果公布後可在「查詢結果」看到。</div>
 <div class="grid">
 <section><h2>想先看哪一項？</h2>
-<div class="tiles" id="tiles"><button class="tile t1" data-t="課間"></button><button class="tile t2" data-t="課後"></button></div>
+<div class="tiles" id="tiles" style="display:block"><p>載入中…</p></div>
 <button class="look" data-t="查詢">查詢報名與錄取結果</button></section>
 <section><h2>報名怎麼進行</h2><div class="steps">
 <div class="step"><i style="background:var(--teal)">1</i><div><b>先看開課</b><span>選好孩子的年級，就只會列出可以報名的社團。看到喜歡的，可以先加入喜愛清單。</span></div></div>
@@ -96,10 +96,11 @@ try{favs=JSON.parse(localStorage.getItem('fav')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const okG=(s,g)=>{const m=String(s).split(/[-~～]/).map(Number);return g>=m[0]&&g<=m[m.length-1]};
 let me=null;
-google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>alert('載入失敗：'+e.message)).getInit();
+google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>{$('#tiles').innerHTML='<div class="win off">載入失敗：'+esc(e.message)+'<br>請管理員檢查試算表的「社團資料」和「設定」工作表。</div>'}).getInit();
 
 function wtxt(w){return w.open?`報名中，${w.end} 截止`:w.early?`${w.start} 開放報名`:'報名已截止'}
 function tiles(){
+  $('#tiles').style.display='grid';
   const n=t=>D.clubs.filter(c=>c.type===t).length;
   $('#tiles').innerHTML=[['課間','t1','🎨🧪','週二、週三的課間'],['課後','t2','⚽🧱','週一至週五放學後']].map(a=>
    `<button class="tile ${a[1]}" data-t="${a[0]}"><div class="pic">${a[2]}</div><div class="tx"><span class="k">${a[3]}</span><b>${a[0]}社團</b><div>${n(a[0])} 個社團</div><div class="st">${wtxt(D.win[a[0]])}</div></div></button>`).join('');
