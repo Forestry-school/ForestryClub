@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>社團報名管理</title>
+<style>
+:root{--ink:#1e3a44;--mute:#5f7a80;--bg:#f4f8f6;--teal:#1f9e84;--gold:#e9bf5b;--red:#e2674f;--navy:#264b5d;--line:#e3ece8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:30px;margin:0 0 4px;letter-spacing:.1em}h2{font-size:19px;margin:0 0 10px}
+.sub{color:var(--mute);margin:0 0 18px}
+.card{background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 18px rgba(30,58,68,.08);margin-bottom:16px}
+input{font:inherit;padding:10px;border:1.5px solid #cfdcd7;border-radius:12px;width:min(260px,100%)}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;background:var(--navy);color:#fff}
+button.gold{background:var(--gold);color:var(--ink)}button.red{background:var(--red)}button.line{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+button:disabled{opacity:.5}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.win{display:flex;flex-wrap:wrap;gap:12px;font-size:14px;margin-bottom:12px}
+.win span{background:#fff6d8;border-radius:10px;padding:6px 12px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 6px;border-top:1px solid var(--line);text-align:left}th{color:var(--mute);font-size:13px;border:0}
+td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
+.sec{font-weight:700;padding-top:14px}
+.msg{margin-top:10px}.ok{color:var(--teal)}.err{color:#b33}
+.scroll{overflow-x:auto}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style></head><body><main>
+<h1>社團報名管理</h1><p class="sub">新北市福瑞斯特國民中小學　抽籤、公布與行政文件</p>
+
+<div class="card" id="lg"><h2>管理密碼</h2>
+<input id="pw" type="password" autocomplete="off" placeholder="請輸入「設定」裡的管理密碼"> <button id="go">登入</button>
+<div class="msg err" id="e"></div></div>
+
+<div id="app" style="display:none">
+<div class="card"><h2>報名狀態</h2><div class="win" id="win"></div>
+<div class="msg" id="m"></div></div>
+
+<div class="card"><h2>抽籤與公布</h2>
+<p class="sub">建議順序：報名截止 → 分發 → 補分發 → 檢查人數 → 公布。分發會覆蓋目前的結果，公布後家長才查得到。</p>
+<div class="btns">
+<button data-op="drawIn" data-c="要依志願分發課間社團嗎？會覆蓋目前的結果。">課間：依志願分發</button>
+<button data-op="supplement" data-c="要把課間沒分到的學生補分發到還有名額的社團嗎？">課間：補分發</button>
+<button data-op="drawAfter" data-c="要抽籤課後社團嗎？會覆蓋目前的結果。">課後：超額抽籤</button>
+<button class="gold" data-op="publishIn" data-c="公布後家長馬上就能查到課間社團結果，確定嗎？">公布課間結果</button>
+<button class="gold" data-op="publishAfter" data-c="公布後家長馬上就能查到課後社團結果，確定嗎？">公布課後結果</button>
+<button class="line" data-op="docs">更新行政文件</button>
+<button class="line" data-op="stats">重新整理人數</button>
+</div></div>
+
+<div class="card"><h2>各社團人數</h2><div class="scroll"><table id="t"></table></div></div>
+<div class="card"><h2>行政文件</h2><p class="sub">抽籤或按「更新行政文件」後，試算表會產生這些工作表：文件_報名名單、文件_各社團錄取名冊（正取在前、備取在後）、文件_出納繳費清冊、文件_材料費收據名單。課後總額 ＝ 每堂費用 × 設定裡的「課後堂數」＋ 材料費。</p></div>
+</div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbx5ZhPRBW5o_cGCRN5mra6bb8Qur4vGy1Zm_xhPzdOTzi_bNoMjvN3TNgs7xhkQCLxa/exec';
+const $=s=>document.querySelector(s);let PW='';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function call(op){
+  return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'admin',pw:PW,op})})
+    .then(r=>r.json()).then(j=>{if(!j.ok)throw new Error(j.error);return j.data});
+}
+function show(d){
+  $('#lg').style.display='none';$('#app').style.display='block';
+  $('#win').innerHTML=['課間','課後'].map(t=>{const w=d.win[t];return `<span>${t}：${w.start} ～ ${w.end}　${w.open?'報名中':w.early?'尚未開放':'已截止'}　公布 ${w.pubAt}${w.pub?'（已公布）':''}</span>`}).join('');
+  let h='<tr><th>社團</th><th class="n">報名</th><th class="n">名額</th><th class="n">第一志願</th><th class="n">錄取</th><th class="n">備取</th></tr>',last='';
+  d.clubs.sort((a,b)=>a.type.localeCompare(b.type)||a.slot.localeCompare(b.slot)).forEach(c=>{
+    const k=c.type+'・'+c.slot;
+    if(k!==last){h+=`<tr><td class="sec" colspan="6">${esc(k)}</td></tr>`;last=k}
+    h+=`<tr><td>${esc(c.name)}</td><td class="n ${c.n>c.cap?'full':''}">${c.n}</td><td class="n">${c.cap}</td><td class="n">${c.type==='課間'?c.first:'—'}</td><td class="n">${d.drawn?c.ok:'—'}</td><td class="n">${d.drawn?c.wait:'—'}</td></tr>`;
+  });
+  $('#t').innerHTML=h;
+  if(d.drawn&&d.unplaced)$('#m').innerHTML=`<span class="err">課間還有 ${d.unplaced} 位學生沒分到社團，可按「課間：補分發」。</span>`;
+}
+function run(op,btn,confirmMsg){
+  if(confirmMsg&&!confirm(confirmMsg))return;
+  document.querySelectorAll('button').forEach(b=>b.disabled=true);
+  $('#m').className='msg';$('#m').textContent='處理中…';
+  call(op).then(d=>{show(d);if(d.msg){$('#m').className='msg ok';$('#m').textContent=d.msg;if(d.unplaced&&d.drawn)$('#m').textContent+=`　課間還有 ${d.unplaced} 位沒分到。`}})
+    .catch(e=>{$('#m').className='msg err';$('#m').textContent=e.message})
+    .finally(()=>document.querySelectorAll('button').forEach(b=>b.disabled=false));
+}
+$('#go').onclick=()=>{
+  PW=$('#pw').value;$('#e').textContent='確認中…';
+  call('stats').then(show).catch(e=>{$('#e').textContent=e.message});
+};
+$('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+$('#app').onclick=e=>{const b=e.target.closest('button[data-op]');if(b)run(b.dataset.op,b,b.dataset.c)};
+</script></main></body></html>
