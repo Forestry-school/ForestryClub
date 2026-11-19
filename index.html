@@ -96,10 +96,13 @@ try{favs=JSON.parse(localStorage.getItem('fav')||'[]')}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const okG=(s,g)=>{const m=String(s).split(/[-~～]/).map(Number);return g>=m[0]&&g<=m[m.length-1]};
 let me=null;
-const LOCAL=typeof google==='undefined'||!google.script;
-if(LOCAL)$('#tiles').innerHTML='<div class="win off">這個頁面不是從 Apps Script 的部署網址開啟的，連不到試算表。請用「部署 → 網頁應用程式」給的 /exec 連結開啟。</div>';
-else setTimeout(()=>{if(!D)$('#tiles').innerHTML='<div class="win off">等了 15 秒還沒有回應。請重新整理，或確認 Apps Script 已部署成網頁應用程式。</div>'},15000);
-if(!LOCAL)google.script.run.withSuccessHandler(d=>{D=d;tiles();favUI()}).withFailureHandler(e=>{$('#tiles').innerHTML='<div class="win off">載入失敗：'+esc(e.message)+'<br>請管理員檢查試算表的「社團資料」和「設定」工作表。</div>'}).getInit();
+const API='https://script.google.com/macros/s/AKfycbx5ZhPRBW5o_cGCRN5mra6bb8Qur4vGy1Zm_xhPzdOTzi_bNoMjvN3TNgs7xhkQCLxa/exec';
+function api(action,p){
+  const o=action==='init'?{}:{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},p))};
+  return fetch(action==='init'?API+'?action=init':API,o).then(r=>r.json()).then(j=>{if(!j.ok)throw new Error(j.error);return j.data});
+}
+setTimeout(()=>{if(!D)$('#tiles').innerHTML='<div class="win off">等了 15 秒還沒有回應。請重新整理，或確認 Apps Script 已部署成網頁應用程式，且「誰可以存取」是「任何人」。</div>'},15000);
+api('init').then(d=>{D=d;tiles();favUI()}).catch(e=>{$('#tiles').innerHTML='<div class="win off">載入失敗：'+esc(e.message)+'<br>請管理員檢查試算表的「社團資料」和「設定」工作表。</div>'});
 
 function wtxt(w){return w.open?`報名中，${w.end} 截止`:w.early?`${w.start} 開放報名`:'報名已截止'}
 function tiles(){
@@ -116,8 +119,8 @@ document.addEventListener('click',e=>{
 });
 $('#lg').onclick=()=>{
   const p=ident();$('#who').className='msg';$('#who').textContent='確認中…';
-  google.script.run.withSuccessHandler(r=>{me=r;$('#who').className='msg ok';$('#who').textContent=`已確認：${GN[r.grade]}年級 班級座號 ${r.seat}　${p.name}`;render()})
-   .withFailureHandler(e=>{me=null;$('#who').className='msg err';$('#who').textContent=e.message;render()}).login(p);
+  api('login',p).then(r=>{me=r;$('#who').className='msg ok';$('#who').textContent=`已確認：${GN[r.grade]}年級 班級座號 ${r.seat}　${p.name}`;render()})
+   .catch(e=>{me=null;$('#who').className='msg err';$('#who').textContent=e.message;render()});
 };
 ['nm','bd'].forEach(i=>$('#'+i).oninput=()=>{if(me){me=null;$('#who').textContent='';render()}});
 
@@ -178,11 +181,11 @@ function send(){
   }else document.querySelectorAll('#body input[type=radio]:checked').forEach(r=>{if(r.value)p.picks.push({id:r.value})});
   if(!p.picks.length)return say('請至少選一個社團');
   const b=$('#send');b.disabled=true;say('送出中…',true);
-  google.script.run.withSuccessHandler(t=>{b.disabled=false;say(t,true)}).withFailureHandler(e=>{b.disabled=false;say(e.message)}).submit(p);
+  api('submit',p).then(t=>{b.disabled=false;say(t,true)}).catch(e=>{b.disabled=false;say(e.message)});
 }
 function look(){
-  google.script.run.withSuccessHandler(r=>{
+  api('lookup',ident()).then(r=>{
     $('#out').innerHTML=r.length?r.map(x=>`<div class="res"><b>${esc(x.club)}</b><br><small>${x.type}・${esc(x.slot)}${x.rank?'・志願 '+x.rank:''}</small>　${esc(x.status)}</div>`).join(''):'<p>查不到資料，請確認姓名和生日。</p>';
-  }).withFailureHandler(e=>$('#out').textContent=e.message).lookup(ident());
+  }).catch(e=>$('#out').textContent=e.message);
 }
 </script></body></html>
