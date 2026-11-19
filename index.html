@@ -134,7 +134,7 @@ function render(){
   const cl=D.clubs.filter(c=>c.type===tab&&okG(c.grades,g));
   if(!cl.length){b.innerHTML=`<p>${GN[g]}年級目前沒有可報名的${tab}社團。</p>`;return}
   const slots={};cl.forEach(c=>(slots[c.slot]=slots[c.slot]||[]).push(c));
-  let h=tab==='課間'?'<p>每個社團選一個志願序，1 是最想參加的。只填想去的就好，至少填 1 個。部分社團需酌收材料費，請點開「簡介與注意事項」查看。</p>':'<p>週一到週五每天最多選 1 個，不想參加的那天選「不參加」。費用以「每堂」計算，實際堂數以學校公告為準。</p>';
+  let h=tab==='課間'?'<p>每個社團選一個志願序，1 是最想參加的。只填想去的就好，至少填 1 個；填的志願都沒抽中，或沒填的社團，系統最後會在剩下的名額中隨機安排。部分社團需酌收材料費，請點開「簡介與注意事項」查看。</p>':'<p>週一到週五每天最多選 1 個，不想參加的那天選「不參加」。費用以「每堂」計算，實際堂數以學校公告為準。</p>';
   for(const s in slots){
     const a=slots[s];h+=`<div class="slot">${esc(s)}</div><div class="clubs">`;
     a.forEach(c=>{
