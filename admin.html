@@ -23,8 +23,17 @@ td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
 .msg{margin-top:10px}.ok{color:var(--teal)}.err{color:#b33}
 .scroll{overflow-x:auto}details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer}.nm{padding:8px 0 4px 18px;font-size:15px;color:var(--mute)}hr{border:0;border-top:1px dashed var(--line)}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#print{display:none}
+@media print{
+ main>*:not(#print){display:none!important}
+ body{background:#fff;font-size:14px}#print{display:block}
+ .pg{page-break-after:always}.pg:last-child{page-break-after:auto}
+ .pg h2{font-size:22px;margin:0 0 4px}.pg p{margin:0 0 10px;color:#000}
+ .pg table{width:100%;border-collapse:collapse}.pg th,.pg td{border:1px solid #333;padding:5px 8px;color:#000;font-size:14px}
+ .pg th{background:#eee}
+}
 </style></head><body><main>
-<h1>社團報名管理</h1><p class="sub">新北市福瑞斯特國民中小學　抽籤、公布與行政文件</p>
+<h1>社團報名管理</h1><p class="sub">新北市福瑞斯特國民中小學　抽籤、公布與行政文件　<small>版本：名單版</small></p>
 
 <div class="card" id="lg"><h2>管理密碼</h2>
 <input id="pw" type="password" autocomplete="off" placeholder="請輸入「設定」裡的管理密碼"> <button id="go">登入</button>
@@ -43,6 +52,8 @@ td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
 <button class="gold" data-op="publishIn" data-c="公布後家長馬上就能查到課間社團結果，確定嗎？">公布課間結果</button>
 <button class="gold" data-op="publishAfter" data-c="公布後家長馬上就能查到課後社團結果，確定嗎？">公布課後結果</button>
 <button class="line" data-op="docs">更新行政文件</button>
+<button class="line" data-print="club">列印：依社團</button>
+<button class="line" data-print="class">列印：依班級</button>
 <button class="line" data-op="stats">重新整理人數</button>
 </div></div>
 
@@ -51,6 +62,7 @@ td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
 <div class="card"><h2>行政文件</h2><p class="sub">抽籤或按「更新行政文件」後，試算表會產生這些工作表：文件_報名名單、文件_各社團錄取名冊（正取在前、備取在後）、文件_出納繳費清冊、文件_材料費收據名單。課後總額 ＝ 每堂費用 × 設定裡的「課後堂數」＋ 材料費。</p></div>
 </div>
 
+<div id="print"></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbx5ZhPRBW5o_cGCRN5mra6bb8Qur4vGy1Zm_xhPzdOTzi_bNoMjvN3TNgs7xhkQCLxa/exec';
 const $=s=>document.querySelector(s);let PW='';
@@ -91,5 +103,38 @@ $('#go').onclick=()=>{
   call('stats').then(show).catch(e=>{$('#e').textContent=e.message});
 };
 $('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
-$('#app').onclick=e=>{const b=e.target.closest('button[data-op]');if(b)run(b.dataset.op,b,b.dataset.c)};
+const PV=r=>{const sn=r[4].slice(-2),cl=r[4].slice(0,-2).replace(/^0+/,'');return{g:+r[3],cl:cl||'－',sn:sn,name:r[5]}};
+function doPrint(mode){
+  document.querySelectorAll('button').forEach(b=>b.disabled=true);
+  $('#m').className='msg';$('#m').textContent='整理列印資料中…';
+  call('print').then(d=>{
+    const rows=d.print;if(!rows.length)throw new Error('還沒有錄取名單，請先抽籤。');
+    let h='';
+    if(mode==='club'){
+      const g={};rows.forEach(r=>{const k=r[0]+'|'+r[1]+'|'+r[2];(g[k]=g[k]||[]).push(r)});
+      Object.keys(g).sort().forEach(k=>{
+        const [t,sl,nm]=k.split('|'),L=g[k].map(r=>Object.assign(PV(r),{st:r[6]}));
+        const srt=(a,b)=>a.g-b.g||String(a.cl).localeCompare(String(b.cl),'zh',{numeric:true})||a.sn.localeCompare(b.sn);
+        const ok=L.filter(x=>x.st==='正取').sort(srt),wt=L.filter(x=>x.st==='備取');
+        const tr=(x,i)=>`<tr><td>${i+1}</td><td>${x.g}年</td><td>${esc(x.cl)}</td><td>${esc(x.sn)}</td><td>${esc(x.name)}</td><td>${x.st}</td><td></td></tr>`;
+        h+=`<section class="pg"><h2>${esc(nm)}　名冊</h2><p>${esc(t)}・${esc(sl)}　正取 ${ok.length} 人${wt.length?'　備取 '+wt.length+' 人':''}</p><table><tr><th>序號</th><th>年級</th><th>班級</th><th>座號</th><th>姓名</th><th>身分</th><th>備註</th></tr>${ok.map(tr).join('')}${wt.map(tr).join('')}</table></section>`;
+      });
+    }else{
+      const g={};
+      rows.filter(r=>r[6]==='正取').forEach(r=>{
+        const v=PV(r),k=v.g+'|'+v.cl,S=(g[k]=g[k]||{});
+        const o=S[v.sn+v.name]=S[v.sn+v.name]||Object.assign(v,{a:[],b:[]});
+        (r[0]==='課間'?o.a:o.b).push(r[0]==='課間'?r[2]:r[1]+' '+r[2]);
+      });
+      Object.keys(g).sort((a,b)=>{const[x,y]=a.split('|'),[p,q]=b.split('|');return x-p||y.localeCompare(q,'zh',{numeric:true})}).forEach(k=>{
+        const [gr,cl]=k.split('|'),L=Object.values(g[k]).sort((a,b)=>a.sn.localeCompare(b.sn));
+        h+=`<section class="pg"><h2>${gr}年 ${esc(cl)}班　社團名單</h2><p>共 ${L.length} 人</p><table><tr><th>座號</th><th>姓名</th><th>課間社團</th><th>課後社團</th></tr>${L.map(x=>`<tr><td>${esc(x.sn)}</td><td>${esc(x.name)}</td><td>${x.a.map(esc).join('、')}</td><td>${x.b.map(esc).join('<br>')}</td></tr>`).join('')}</table></section>`;
+      });
+    }
+    $('#print').innerHTML=h;$('#m').className='msg ok';$('#m').textContent='已整理好，請在列印視窗選印表機或「另存為 PDF」。';
+    setTimeout(()=>window.print(),300);
+  }).catch(e=>{$('#m').className='msg err';$('#m').textContent=e.message})
+   .finally(()=>document.querySelectorAll('button').forEach(b=>b.disabled=false));
+}
+$('#app').onclick=e=>{const p=e.target.closest('button[data-print]');if(p)return doPrint(p.dataset.print);const b=e.target.closest('button[data-op]');if(b)run(b.dataset.op,b,b.dataset.c)};
 </script></main></body></html>
