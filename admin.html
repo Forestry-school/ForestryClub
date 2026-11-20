@@ -21,7 +21,7 @@ th,td{padding:8px 6px;border-top:1px solid var(--line);text-align:left}th{color:
 td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
 .sec{font-weight:700;padding-top:14px}
 .msg{margin-top:10px}.ok{color:var(--teal)}.err{color:#b33}
-.scroll{overflow-x:auto}
+.scroll{overflow-x:auto}details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer}.nm{padding:8px 0 4px 18px;font-size:15px;color:var(--mute)}hr{border:0;border-top:1px dashed var(--line)}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </style></head><body><main>
 <h1>社團報名管理</h1><p class="sub">新北市福瑞斯特國民中小學　抽籤、公布與行政文件</p>
@@ -47,6 +47,7 @@ td.n{text-align:right;white-space:nowrap}.full{color:var(--red);font-weight:700}
 </div></div>
 
 <div class="card"><h2>各社團人數</h2><div class="scroll"><table id="t"></table></div></div>
+<div class="card" id="lists"><h2>抽籤結果名單</h2><div id="ls"></div></div>
 <div class="card"><h2>行政文件</h2><p class="sub">抽籤或按「更新行政文件」後，試算表會產生這些工作表：文件_報名名單、文件_各社團錄取名冊（正取在前、備取在後）、文件_出納繳費清冊、文件_材料費收據名單。課後總額 ＝ 每堂費用 × 設定裡的「課後堂數」＋ 材料費。</p></div>
 </div>
 
@@ -68,6 +69,13 @@ function show(d){
     h+=`<tr><td>${esc(c.name)}</td><td class="n ${c.n>c.cap?'full':''}">${c.n}</td><td class="n">${c.cap}</td><td class="n">${c.type==='課間'?c.first:'—'}</td><td class="n">${d.drawn?c.ok:'—'}</td><td class="n">${d.drawn?c.wait:'—'}</td></tr>`;
   });
   $('#t').innerHTML=h;
+  $('#lists').style.display=d.drawn?'block':'none';
+  let l=d.unplaced?`<details open><summary class="full">還沒分到社團（${d.unplaced} 人）</summary><div class="nm">${d.unplacedList.map(esc).join('<br>')}</div></details>`:'';
+  d.clubs.forEach(c=>{
+    if(!c.n)return;
+    l+=`<details><summary>${esc(c.type)}・${esc(c.slot)}　<b>${esc(c.name)}</b>　正取 ${c.ok} / 名額 ${c.cap}${c.wait?'　備取 '+c.wait:''}</summary><div class="nm">${c.okL.length?c.okL.map(esc).join('<br>'):'（沒有錄取）'}${c.waitL.length?'<hr><b>備取</b><br>'+c.waitL.map(esc).join('<br>'):''}</div></details>`;
+  });
+  $('#ls').innerHTML=l;
   if(d.drawn&&d.unplaced)$('#m').innerHTML=`<span class="err">課間還有 ${d.unplaced} 位學生沒分到社團，可按「課間：補分發」。</span>`;
 }
 function run(op,btn,confirmMsg){
